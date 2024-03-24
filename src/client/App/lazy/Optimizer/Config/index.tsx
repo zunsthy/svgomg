@@ -15,17 +15,23 @@ interface Props {
 const Config: FunctionComponent<Props> = ({ optimizeConfig, showOriginal }) => {
   return (
     <div class={styles.config}>
-      <div class={styles.configScroller}>
-        <form>
-          <CheckboxRow text="Show Original" checked={showOriginal} />
-          {Object.entries(optimizeConfig.plugins).map(([name, settings]) => (
+      <div class={styles.inner}>
+        <div class={styles.configScroller}>
+          <form>
+            <CheckboxRow text="Show Original" checked={showOriginal} />
+            {Object.entries(optimizeConfig.plugins).map(([name, settings]) => (
+              <CheckboxRow
+                text={pluginData[name].title}
+                checked={settings.enabled}
+              />
+            ))}
             <CheckboxRow
-              text={pluginData[name].title}
-              checked={settings.enabled}
+              text="Pretty"
+              checked={optimizeConfig.pretty.enabled}
             />
-          ))}
-          <CheckboxRow text="Pretty" checked={optimizeConfig.pretty.enabled} />
-        </form>
+          </form>
+        </div>
+        <div class={styles.results}>Hello</div>
       </div>
     </div>
   );
