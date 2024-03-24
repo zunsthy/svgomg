@@ -6,20 +6,9 @@ import {
 } from './types';
 import mapObject from './utils/mapObject';
 import { optimize } from './svgoProcessor';
+import KeyValCache from './utils/KeyValCache';
 
-const CACHE_SIZE = 10;
-const compressCache = new Map<string, RenderableSVG>();
-
-function addToCache(key: string, value: RenderableSVG) {
-  compressCache.set(key, value);
-
-  if (compressCache.size > CACHE_SIZE) {
-    for (const key of compressCache.keys()) {
-      compressCache.delete(key);
-      if (compressCache.size <= CACHE_SIZE) break;
-    }
-  }
-}
+const cache = new KeyValCache<string, RenderableSVG>(10);
 
 export default function useOptimizeSVG(
   input: Signal<RenderableSVG | null>,
@@ -30,7 +19,7 @@ export default function useOptimizeSVG(
   useSignalEffect(() => {
     input.valueOf();
     // Clear the cache when the source changes.
-    return () => compressCache.clear();
+    return () => cache.clear();
   });
 
   useSignalEffect(() => {
@@ -48,7 +37,7 @@ export default function useOptimizeSVG(
     };
 
     const cacheKey = JSON.stringify(clonableOptimizeConfig);
-    const cacheResult = compressCache.get(cacheKey);
+    const cacheResult = cache.get(cacheKey);
 
     if (cacheResult) {
       optimizedSVG.value = cacheResult;
@@ -61,7 +50,7 @@ export default function useOptimizeSVG(
     optimize(input.value.source, clonableOptimizeConfig, { signal })
       .then((result) => {
         signal.throwIfAborted();
-        addToCache(cacheKey, result);
+        cache.set(cacheKey, result);
         optimizedSVG.value = result;
       })
       .catch((err) => {
