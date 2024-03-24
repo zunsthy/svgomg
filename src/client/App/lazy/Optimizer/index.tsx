@@ -23,6 +23,9 @@ import mapObject from './utils/mapObject';
 import useOptimizeSVG from './useOptimizeSVG';
 import useRenderableSVG from './useRenderableSVG';
 import { compress } from './brotliProcessor';
+import useToSignal from '../../../hooks/useToSignal';
+import KeyValCache from './utils/KeyValCache';
+import useCompressedSize from './useCompressedSize';
 
 interface Props {
   input: Input;
@@ -31,10 +34,14 @@ interface Props {
 }
 
 const tabNames = ['Image', 'Markup'] as const;
+const outputBrotliCache = new KeyValCache<string, number>(10);
 
 const Optimizer: FunctionComponent<Props> = ({ input, onMenuClick, inert }) => {
   // Model
   const inputSVG = useRenderableSVG(input.body);
+  const inputSource = useToSignal(input.body);
+  const inputCompressedSize = useCompressedSize(inputSource);
+
   const optimizeConfig: OptimizeConfig = useMemo(
     () => ({
       pretty: { enabled: signal(false) },
@@ -47,19 +54,8 @@ const Optimizer: FunctionComponent<Props> = ({ input, onMenuClick, inert }) => {
   );
 
   const optimizedSVG = useOptimizeSVG(inputSVG, optimizeConfig);
-
-  useSignalEffect(() => {
-    if (optimizedSVG.value === null) return;
-    const { source } = optimizedSVG.value;
-    compress(source).then((compressedSize) => {
-      console.log(
-        'Uncompressed size',
-        source.length,
-        'Compressed size:',
-        compressedSize,
-      );
-    });
-  });
+  const outputSource = useComputed(() => optimizedSVG.value?.source ?? null);
+  const outputCompressedSize = useCompressedSize(outputSource);
 
   // View
   const showOriginal = useSignal(false);
@@ -101,7 +97,12 @@ const Optimizer: FunctionComponent<Props> = ({ input, onMenuClick, inert }) => {
           )
         )}
 
-        <Config showOriginal={showOriginal} optimizeConfig={optimizeConfig} />
+        <Config
+          inputCompressedSize={inputCompressedSize}
+          outputCompressedSize={outputCompressedSize}
+          showOriginal={showOriginal}
+          optimizeConfig={optimizeConfig}
+        />
       </div>
     </div>
   );
