@@ -1,4 +1,4 @@
-import { optimize, CustomPlugin, PluginConfig } from 'svgo';
+import { optimize, CustomPlugin, PluginConfig } from 'svgo/browser';
 import exposeWorkerActions from '../../utils/exposeWorkerActions';
 import { ProcessorOptimizeConfig, RenderableSVG } from '../../types';
 

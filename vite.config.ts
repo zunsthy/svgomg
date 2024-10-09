@@ -24,6 +24,7 @@ export default defineConfig(({ command }) => ({
     format: 'es',
   },
   build: {
+    target: 'esnext',
     assetsInlineLimit: 0,
     modulePreload: { polyfill: false },
     ssrEmitAssets: true,
